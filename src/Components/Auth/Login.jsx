@@ -3,7 +3,6 @@ import { Form, Button, Spinner, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,34 +16,8 @@ const Login = () => {
     const email = event.target.email.value;
     const password = event.target.password.value;
 
-    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
-
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          returnSecureToken: true
-        })
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error.message || 'Authentication failed');
-      }
-
-      const data = await response.json();
-      const expirationTime = new Date(
-        new Date().getTime() + +data.expiresIn * 1000
-      ).toISOString();
-
-      authCtx.login(data.idToken, expirationTime, data.email);
-      toast.success('Login successful');
+      await authCtx.login(email, password);
       navigate('/');
     } catch (err) {
       toast.error(err.message);

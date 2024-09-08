@@ -23,32 +23,8 @@ const Signup = () => {
             return;
         }
 
-        const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-        const url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`;
-
         try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email,
-                    password,
-                    returnSecureToken: true
-                })
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error.message || 'Signup failed');
-            }
-
-            const data = await response.json();
-            const expirationTime = new Date(
-                new Date().getTime() + +data.expiresIn * 1000
-            ).toISOString();
-
-            authCtx.login(data.idToken, expirationTime, data.email);
-            toast.success('Signup successful');
+            await authCtx.signup(email, password);
             navigate('/');
         } catch (err) {
             toast.error(err.message);

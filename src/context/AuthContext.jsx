@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const AuthContext = createContext();
 
@@ -22,6 +23,7 @@ export const AuthContextProvider = ({ children }) => {
     const navigate = useNavigate();
     const userIsLoggedIn = !!token;
 
+    //Logout Handler
     const logoutHandler = useCallback(() => {
         setToken(null);
         localStorage.removeItem('token');
@@ -39,19 +41,53 @@ export const AuthContextProvider = ({ children }) => {
         }
     }, [logoutHandler, initialRemainingTime]);
 
-    const loginHandler = (token, expirationTime, email) => {
-        setToken(token);
-        localStorage.setItem('token', token);
-        localStorage.setItem('expirationTime', expirationTime);
-        localStorage.setItem('email', email);
+    //Login Handler
 
-        const remainingDuration = calculateRemainingTime(expirationTime);
-        setTimeout(logoutHandler, remainingDuration);
+    const loginHandler = async (email, password) => {
+        const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+        const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    returnSecureToken: true
+                })
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error.message || 'Authentication failed');
+            }
+
+            const data = await response.json();
+            const expirationTime = new Date(new Date().getTime() + +data.expiresIn * 1000).toISOString();
+            setToken(data.idToken);
+            localStorage.setItem('token', data.idToken);
+            localStorage.setItem('expirationTime', expirationTime);
+            localStorage.setItem('email', data.email);
+
+            const remainingDuration = calculateRemainingTime(expirationTime);
+            setTimeout(logoutHandler, remainingDuration);
+
+            toast.success('Login successful');
+        } catch (err) {
+            toast.error(err.message);
+        }
     };
 
+    //Signup Handler
     const signupHandler = async (email, password) => {
+        const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+        const url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`;
+
         try {
-            const response = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=YOUR_API_KEY', {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -68,15 +104,22 @@ export const AuthContextProvider = ({ children }) => {
 
             const data = await response.json();
             const expirationTime = new Date(new Date().getTime() + +data.expiresIn * 1000).toISOString();
+            setToken(data.idToken);
+            localStorage.setItem('token', data.idToken);
+            localStorage.setItem('expirationTime', expirationTime);
+            localStorage.setItem('email', data.email);
 
-            loginHandler(data.idToken, expirationTime, data.email);
+            const remainingDuration = calculateRemainingTime(expirationTime);
+            setTimeout(logoutHandler, remainingDuration);
+
+            toast.success('Signup successful');
         } catch (err) {
-            console.error(err.message);
+            toast.error(err.message);
         }
     };
 
     const contextValue = {
-        token: token,
+        token,
         isLoggedIn: userIsLoggedIn,
         login: loginHandler,
         logout: logoutHandler,
