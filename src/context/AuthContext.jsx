@@ -23,9 +23,9 @@ export const AuthContextProvider = ({ children }) => {
         : 0;
 
     const [token, setToken] = useState(initialRemainingTime > 0 ? storedToken : null);
-    const [email, setEmail] = useState(storedEmail || ''); // Define email state
-    const [displayName, setDisplayName] = useState(storedDisplayName); // Define displayName state
-    const [photoUrl, setPhotoUrl] = useState(storedPhotoUrl); // Define photoUrl state
+    const [email, setEmail] = useState(storedEmail || '');
+    const [displayName, setDisplayName] = useState(storedDisplayName);
+    const [photoUrl, setPhotoUrl] = useState(storedPhotoUrl);
     const [isProfileUpdated, setIsProfileUpdated] = useState(false);
 
     const navigate = useNavigate();
@@ -46,16 +46,18 @@ export const AuthContextProvider = ({ children }) => {
     }, [navigate]);
 
     useEffect(() => {
-        if (initialRemainingTime <= 60000) {
-            logoutHandler();
-        } else {
-            const logoutTimer = setTimeout(logoutHandler, initialRemainingTime);
-            return () => clearTimeout(logoutTimer);
+        // Ensure that we only handle logout when needed
+        if (userIsLoggedIn) {
+            if (initialRemainingTime <= 60000) {
+                logoutHandler();
+            } else {
+                const logoutTimer = setTimeout(logoutHandler, initialRemainingTime);
+                return () => clearTimeout(logoutTimer);
+            }
         }
-    }, [logoutHandler, initialRemainingTime]);
+    }, [logoutHandler, initialRemainingTime, userIsLoggedIn]);
 
-    //Login Handler
-
+    // Login Handler
     const loginHandler = async (email, password) => {
         const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
         const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;

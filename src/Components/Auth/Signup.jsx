@@ -33,6 +33,12 @@ const Signup = () => {
         }
     };
 
+    const forgotPasswordHandler = () => {
+        // Navigate to reset password page
+        navigate('/forgotpassword');
+    };
+
+
     return (
         <Container>
             <Row className="justify-content-md-center">
@@ -62,6 +68,15 @@ const Signup = () => {
                                         <span className="visually-hidden">Loading...</span>
                                     </Spinner>
                                 )}
+                            </div>
+                            <div className="mt-3 text-center">
+                                <Button
+                                    variant="link"
+                                    onClick={forgotPasswordHandler}
+                                    style={{ fontSize: '1rem', fontWeight: 'bold', color: '#007bff' }}
+                                >
+                                    Forgot Password? Click here to reset
+                                </Button>
                             </div>
                         </Form>
                     </section>

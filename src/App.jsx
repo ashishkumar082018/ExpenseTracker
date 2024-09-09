@@ -7,7 +7,7 @@ import NavBar from './Components/Layouts/NavBar';
 import NotFound404 from "./Components/Layouts/NotFound404"
 import { ToastContainer } from 'react-toastify';
 import Dashboard from "./Components/pages/DashBoard";
-
+import ForgotPassword from "./Components/pages/ForgotPassword";
 
 function App() {
   return (
@@ -18,8 +18,9 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgotpassword" element={<ForgotPassword />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/*" element={<NotFound404 />} />
+        <Route path="*" element={<NotFound404 />} />
       </Routes>
     </div>
   );
