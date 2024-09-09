@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Container, Form, Button, Alert, FloatingLabel, Row, Col, } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Container, Form, Button, Alert, FloatingLabel, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import AuthContext from "../../context/AuthContext";
 
 const UpdateProfile = () => {
-    const authCtx = useContext(AuthContext);
     const navigate = useNavigate();
     const firebaseApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
     const [profile, setProfile] = useState({
         displayName: "",
         email: "",
         photoUrl: "",
+        emailVerified: false,
     });
     const [updatedProfile, setUpdatedProfile] = useState(profile);
     const [isLoading, setIsLoading] = useState(true);
@@ -43,6 +42,7 @@ const UpdateProfile = () => {
                     displayName: userData.displayName || "",
                     email: userData.email || "",
                     photoUrl: userData.photoUrl || "",
+                    emailVerified: userData.emailVerified || false,
                 });
                 setUpdatedProfile({
                     displayName: userData.displayName || "",
@@ -114,6 +114,35 @@ const UpdateProfile = () => {
         }
     };
 
+    // Send email verification
+    const sendEmailVerification = async () => {
+        try {
+            setIsLoading(true);
+            const response = await fetch(
+                `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${firebaseApiKey}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        requestType: "VERIFY_EMAIL",
+                        idToken: userIdToken,
+                    }),
+                }
+            );
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error?.message || "Failed to send verification email.");
+            }
+            toast("Verification email sent!");
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setUpdatedProfile((prevProfile) => ({
@@ -174,6 +203,21 @@ const UpdateProfile = () => {
                                 />
                             </FloatingLabel>
                         </Form.Group>
+                    </Col>
+                    <Col className="d-flex align-items-center">
+                        {profile.emailVerified ? (
+                            <small className="text-success">Email Verified</small>
+                        ) : (
+                            <Button
+                                variant="warning"
+                                size="sm"
+                                className="mt-2"
+                                onClick={sendEmailVerification}
+                                disabled={isLoading}
+                            >
+                                Verify Email
+                            </Button>
+                        )}
                     </Col>
                 </Row>
 
