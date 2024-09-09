@@ -18,7 +18,7 @@ const Login = () => {
 
     try {
       await authCtx.login(email, password);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       toast.error(err.message);
     } finally {
