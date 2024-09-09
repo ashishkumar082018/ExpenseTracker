@@ -112,12 +112,6 @@ export const AuthContextProvider = ({ children }) => {
             const remainingDuration = calculateRemainingTime(expirationTime);
             setTimeout(logoutHandler, remainingDuration);
 
-            if (!user.displayName || !user.photoUrl) {
-                navigate('/dashboard'); // Redirect to dashboard if profile is not complete
-            } else {
-                navigate('/'); // Redirect to home page if profile is complete
-            }
-
             toast.success('Login successful');
         } catch (err) {
             toast.error(err.message);

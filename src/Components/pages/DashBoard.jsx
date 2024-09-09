@@ -6,13 +6,10 @@ import { toast } from "react-toastify";
 const Dashboard = () => {
     const authCtx = useContext(AuthContext);
     const isProfileUpdated = authCtx.isProfileUpdated;
-    const isLoggedIn = authCtx.isLoggedIn;
 
     useEffect(() => {
-        if (isLoggedIn && !isProfileUpdated) {
-            toast.info("Please update your profile ");
-        }
-    }, [isProfileUpdated]);
+        toast.info("Please update your profile ");
+    }, []);
 
     return (
         <>
