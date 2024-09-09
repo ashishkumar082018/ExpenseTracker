@@ -1,4 +1,5 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import AuthContext from './AuthContext'; // Assuming you have an AuthContext
 
 const ExpenseContext = createContext({
     items: [],
@@ -11,12 +12,14 @@ const ExpenseContext = createContext({
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
 
 const ExpenseProvider = ({ children }) => {
+    const { userId } = useContext(AuthContext); // Get user ID from AuthContext
     const [items, setItems] = useState([]);
 
     useEffect(() => {
         async function fetchExpenses() {
+            if (!userId) return; // Exit if no user ID
             try {
-                const response = await fetch(`${API_ENDPOINT}/expenses.json`);
+                const response = await fetch(`${API_ENDPOINT}/${userId}/expenses.json`);
                 const data = await response.json();
 
                 if (response.ok) {
@@ -38,11 +41,12 @@ const ExpenseProvider = ({ children }) => {
             }
         }
         fetchExpenses();
-    }, []);
+    }, [userId]); // Re-run when userId changes
 
     const addItem = async (item) => {
+        if (!userId) return; // Exit if no user ID
         try {
-            const response = await fetch(`${API_ENDPOINT}/expenses.json`, {
+            const response = await fetch(`${API_ENDPOINT}/${userId}/expenses.json`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -61,8 +65,9 @@ const ExpenseProvider = ({ children }) => {
     };
 
     const removeItem = async (id) => {
+        if (!userId) return; // Exit if no user ID
         try {
-            const response = await fetch(`${API_ENDPOINT}/expenses/${id}.json`, {
+            const response = await fetch(`${API_ENDPOINT}/${userId}/expenses/${id}.json`, {
                 method: 'DELETE',
             });
             if (response.ok) {
@@ -76,8 +81,9 @@ const ExpenseProvider = ({ children }) => {
     };
 
     const editItem = async (id, updatedItem) => {
+        if (!userId) return; // Exit if no user ID
         try {
-            const response = await fetch(`${API_ENDPOINT}/expenses/${id}.json`, {
+            const response = await fetch(`${API_ENDPOINT}/${userId}/expenses/${id}.json`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

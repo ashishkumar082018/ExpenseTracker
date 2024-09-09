@@ -10,12 +10,12 @@ export const AuthContextProvider = ({ children }) => {
     const storedEmail = localStorage.getItem('email');
     const storedDisplayName = localStorage.getItem('displayName') || '';
     const storedPhotoUrl = localStorage.getItem('photoUrl') || '';
+    const storedUserId = localStorage.getItem('userId') || ''; // New: Store User ID
 
     const calculateRemainingTime = (expirationTime) => {
         const currentTime = new Date().getTime();
         const adjustedExpirationTime = new Date(expirationTime).getTime();
-        const remainingDuration = adjustedExpirationTime - currentTime;
-        return remainingDuration;
+        return adjustedExpirationTime - currentTime;
     };
 
     const initialRemainingTime = storedExpirationDate
@@ -26,6 +26,7 @@ export const AuthContextProvider = ({ children }) => {
     const [email, setEmail] = useState(storedEmail || '');
     const [displayName, setDisplayName] = useState(storedDisplayName);
     const [photoUrl, setPhotoUrl] = useState(storedPhotoUrl);
+    const [userId, setUserId] = useState(storedUserId); // New: User ID state
     const [isProfileUpdated, setIsProfileUpdated] = useState(false);
 
     const navigate = useNavigate();
@@ -37,11 +38,13 @@ export const AuthContextProvider = ({ children }) => {
         setEmail('');
         setDisplayName('');
         setPhotoUrl('');
+        setUserId(''); // Clear User ID
         localStorage.removeItem('token');
         localStorage.removeItem('expirationTime');
         localStorage.removeItem('email');
         localStorage.removeItem('displayName');
         localStorage.removeItem('photoUrl');
+        localStorage.removeItem('userId'); // Remove User ID
         navigate('/login');
     }, [navigate]);
 
@@ -84,9 +87,11 @@ export const AuthContextProvider = ({ children }) => {
             const expirationTime = new Date(new Date().getTime() + +data.expiresIn * 1000).toISOString();
             setToken(data.idToken);
             setEmail(data.email);
+            setUserId(data.localId); // Store User ID
             localStorage.setItem('token', data.idToken);
             localStorage.setItem('expirationTime', expirationTime);
             localStorage.setItem('email', data.email);
+            localStorage.setItem('userId', data.localId); // Store User ID
 
             // Fetch user profile data
             const userDataResponse = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
@@ -120,7 +125,7 @@ export const AuthContextProvider = ({ children }) => {
         }
     };
 
-    //Signup Handler
+    // Signup Handler
     const signupHandler = async (email, password) => {
         const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
         const url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`;
@@ -145,9 +150,11 @@ export const AuthContextProvider = ({ children }) => {
             const expirationTime = new Date(new Date().getTime() + +data.expiresIn * 1000).toISOString();
             setToken(data.idToken);
             setEmail(data.email);
+            setUserId(data.localId); // Store User ID
             localStorage.setItem('token', data.idToken);
             localStorage.setItem('expirationTime', expirationTime);
             localStorage.setItem('email', data.email);
+            localStorage.setItem('userId', data.localId); // Store User ID
 
             const remainingDuration = calculateRemainingTime(expirationTime);
             setTimeout(logoutHandler, remainingDuration);
@@ -163,6 +170,7 @@ export const AuthContextProvider = ({ children }) => {
         email,
         displayName,
         photoUrl,
+        userId, // Provide User ID in context
         isLoggedIn: userIsLoggedIn,
         login: loginHandler,
         logout: logoutHandler,
