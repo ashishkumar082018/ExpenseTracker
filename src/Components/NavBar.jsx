@@ -1,15 +1,20 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Navbar, Nav, Container, Button } from 'react-bootstrap';
-import { NavLink } from 'react-router-dom';
-import AuthContext from '../context/AuthContext';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../store/authSlice';
 import { toast } from 'react-toastify';
 
 const NavBar = () => {
-    const authCtx = useContext(AuthContext);
+    const dispatch = useDispatch();
+    const isLoggedIn = useSelector((state) => state.authState.isLoggedIn);
+    const navigate = useNavigate();
 
     const buttonHandler = () => {
-        authCtx.logout();
+        dispatch(logout());
+        localStorage.removeItem('expirationTime');
         toast("Logout successful");
+        navigate("/login");
     };
 
     const linkStyle = ({ isActive }) => ({
@@ -35,7 +40,7 @@ const NavBar = () => {
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="ms-auto">
-                        {!authCtx.isLoggedIn && (
+                        {!isLoggedIn && (
                             <>
                                 <Nav.Link as={NavLink} to="/login" style={linkStyle} className="nav-link" end>
                                     Login
@@ -46,12 +51,12 @@ const NavBar = () => {
                             </>
                         )}
 
-                        {authCtx.isLoggedIn && (
+                        {isLoggedIn && (
                             <>
-                                <Nav.Link as={NavLink} to="/dashboard" style={linkStyle} className="nav-link">
+                                <Nav.Link as={NavLink} to="/dashboard" style={(props) => ({ ...linkStyle(props), ...linkHoverStyle(props) })} className="nav-link">
                                     Dashboard
                                 </Nav.Link>
-                                <Nav.Link as={NavLink} to="/profile" style={linkStyle} className="nav-link">
+                                <Nav.Link as={NavLink} to="/profile" style={(props) => ({ ...linkStyle(props), ...linkHoverStyle(props) })} className="nav-link">
                                     Profile
                                 </Nav.Link>
                                 <Button

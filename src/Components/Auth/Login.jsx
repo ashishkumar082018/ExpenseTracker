@@ -1,12 +1,13 @@
-import { useContext, useState } from 'react';
-import { Form, Button, Spinner, Container, Row, Col } from 'react-bootstrap';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthContext from '../../context/AuthContext';
+import { useDispatch } from 'react-redux';
+import { Form, Button, Spinner, Container, Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import { setCredentials, logout } from '../../store/authSlice';
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const authCtx = useContext(AuthContext);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const submitHandler = async (event) => {
@@ -16,9 +17,52 @@ const Login = () => {
     const email = event.target.email.value;
     const password = event.target.password.value;
 
+    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
+
     try {
-      await authCtx.login(email, password);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          returnSecureToken: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error.message || 'Authentication failed');
+      }
+
+      const data = await response.json();
+      const expirationTime = new Date(new Date().getTime() + +data.expiresIn * 1000).toISOString();
+
+      // Dispatch the setCredentials action
+      dispatch(setCredentials({
+        token: data.idToken,
+        email: data.email,
+        userId: data.localId
+      }));
+
+      // Store expiration time in localStorage
+      localStorage.setItem('expirationTime', expirationTime);
+
+      // Calculate remaining duration
+      const remainingDuration = new Date(expirationTime).getTime() - new Date().getTime();
+
+      // Schedule logout based on expiration time
+      setTimeout(() => {
+        dispatch(logout()); // Clear Redux state
+        localStorage.removeItem('expirationTime');
+        navigate('/login');
+        toast.info('Session expired. Please log in again.');
+      }, remainingDuration);
+
+      // Navigate to the home page
       navigate('/');
+      toast.success('Login successful');
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -27,7 +71,6 @@ const Login = () => {
   };
 
   const forgotPasswordHandler = () => {
-    // Navigate to reset password page
     navigate('/forgotpassword');
   };
 

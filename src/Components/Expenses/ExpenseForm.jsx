@@ -1,26 +1,48 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { Form, Button, Row, Col, FloatingLabel, Container } from "react-bootstrap";
-import { ExpenseContext } from "../../context/ExpenseContext";
+import { useDispatch, useSelector } from "react-redux";
+import { addExpense } from "../../store/expenseSlice";
+import { toast } from "react-toastify";
 
 const ExpenseForm = () => {
     const [amount, setAmount] = useState("");
     const [description, setDescription] = useState("");
-    const [category, setCategory] = useState("");
+    const [category, setCategory] = useState("Food");
 
-    const { addItem } = useContext(ExpenseContext);
+    const dispatch = useDispatch();
+    const userId = useSelector((state) => state.authState.userId);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const newItem = {
-            id: Date.now().toString(),
-            amount,
+            amount: parseFloat(amount),
             description,
             category,
+            userId,
         };
-        addItem(newItem);
-        setAmount("");
-        setDescription("");
-        setCategory("Food");
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/expenses.json`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newItem),
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                dispatch(addExpense({ id: data.name, ...newItem }));
+                toast.success('Expense added successfully');
+                setAmount("");
+                setDescription("");
+                setCategory("Food");
+            } else {
+                throw new Error('Failed to add expense.');
+            }
+        } catch (error) {
+            toast.error(error.message);
+        }
     };
 
     return (
