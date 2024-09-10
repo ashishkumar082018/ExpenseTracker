@@ -7,8 +7,11 @@ import { toast } from 'react-toastify';
 
 const NavBar = () => {
     const dispatch = useDispatch();
-    const isLoggedIn = useSelector((state) => state.authState.isLoggedIn);
     const navigate = useNavigate();
+
+    // Get login state and total expense amount from Redux
+    const isLoggedIn = useSelector((state) => state.authState.isLoggedIn);
+    const totalExpenseAmount = useSelector((state) => state.expense.totalExpenseAmount);
 
     const buttonHandler = () => {
         dispatch(logout());
@@ -59,6 +62,23 @@ const NavBar = () => {
                                 <Nav.Link as={NavLink} to="/profile" style={(props) => ({ ...linkStyle(props), ...linkHoverStyle(props) })} className="nav-link">
                                     Profile
                                 </Nav.Link>
+
+                                {/* Show Activate Premium button if total expenses exceed ₹10,000 */}
+                                {totalExpenseAmount > 10000 && (
+                                    <Button
+                                        variant="warning"
+                                        style={{
+                                            marginLeft: '1rem',
+                                            borderRadius: '0.25rem',
+                                            padding: '0.5rem 1rem',
+                                            fontWeight: 'bold'
+                                        }}
+                                        // onClick={() => toast("Premium activated")}
+                                    >
+                                        Activate Premium
+                                    </Button>
+                                )}
+
                                 <Button
                                     variant="outline-light"
                                     onClick={buttonHandler}
