@@ -1,23 +1,52 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Button } from 'react-bootstrap';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { toast } from 'react-toastify';
+import { setPremiumStatus } from '../store/premiumSlice';
+import { toggleTheme } from '../store/themeSlice';
+import { downloadCSV } from '../utils/downloadCSV'; // Import the utility function
 
 const NavBar = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    // Get login state and total expense amount from Redux
+    const [isPremium, setIsPremium] = useState(false);
+
+    useEffect(() => {
+        const storedPremiumStatus = localStorage.getItem('isPremium') === 'true';
+        setIsPremium(storedPremiumStatus);
+        dispatch(setPremiumStatus(storedPremiumStatus));
+    }, [dispatch]);
+
     const isLoggedIn = useSelector((state) => state.authState.isLoggedIn);
     const totalExpenseAmount = useSelector((state) => state.expense.totalExpenseAmount);
+    const premiumStatus = useSelector((state) => state.premium.isPremium);
+    const expenses = useSelector((state) => state.expense.expenses); 
 
     const buttonHandler = () => {
         dispatch(logout());
         localStorage.removeItem('expirationTime');
         toast("Logout successful");
         navigate("/login");
+    };
+
+    const activatePremium = () => {
+        setTimeout(() => {
+            toast("You are a premium user now!");
+            localStorage.setItem('isPremium', 'true');
+            dispatch(setPremiumStatus(true));
+            setIsPremium(true);
+        }, 1000);
+    };
+
+    const handleThemeToggle = () => {
+        dispatch(toggleTheme());
+    };
+
+    const handleDownload = () => {
+        downloadCSV(expenses);
     };
 
     const linkStyle = ({ isActive }) => ({
@@ -63,8 +92,7 @@ const NavBar = () => {
                                     Profile
                                 </Nav.Link>
 
-                                {/* Show Activate Premium button if total expenses exceed ₹10,000 */}
-                                {totalExpenseAmount > 10000 && (
+                                {!premiumStatus && totalExpenseAmount > 10000 && (
                                     <Button
                                         variant="warning"
                                         style={{
@@ -73,10 +101,48 @@ const NavBar = () => {
                                             padding: '0.5rem 1rem',
                                             fontWeight: 'bold'
                                         }}
-                                        // onClick={() => toast("Premium activated")}
+                                        onClick={activatePremium}
                                     >
                                         Activate Premium
                                     </Button>
+                                )}
+
+                                {premiumStatus && (
+                                    <>
+                                        <span
+                                            style={{
+                                                marginLeft: '1rem',
+                                                color: 'gold',
+                                                fontWeight: 'bold'
+                                            }}
+                                        >
+                                            You are a premium user
+                                        </span>
+                                        <Button
+                                            variant="outline-light"
+                                            onClick={handleThemeToggle}
+                                            style={{
+                                                marginLeft: '1rem',
+                                                borderRadius: '0.25rem',
+                                                padding: '0.5rem 1rem',
+                                                fontWeight: 'bold'
+                                            }}
+                                        >
+                                            Toggle Theme
+                                        </Button>
+                                        <Button
+                                            variant="outline-light"
+                                            onClick={handleDownload}
+                                            style={{
+                                                marginLeft: '1rem',
+                                                borderRadius: '0.25rem',
+                                                padding: '0.5rem 1rem',
+                                                fontWeight: 'bold'
+                                            }}
+                                        >
+                                            Download CSV
+                                        </Button>
+                                    </>
                                 )}
 
                                 <Button

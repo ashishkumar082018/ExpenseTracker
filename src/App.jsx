@@ -9,12 +9,14 @@ import Dashboard from "./Components/pages/DashBoard";
 import ProfilePage from "./Components/pages/ProfilePage";
 import ForgotPassword from "./Components/pages/ForgotPassword";
 import { useSelector } from 'react-redux';
+import "./App.css"
 
 function App() {
   const loggedIn = useSelector((state) => state.authState.isLoggedIn);
+  const isDarkMode = useSelector((state) => state.theme.isDarkMode); // Get dark mode state
 
   return (
-    <div className="App">
+    <div style={{  height: '100vh' }} className={`App ${isDarkMode ? 'dark-mode' : 'light-mode'}`}> {/* Apply theme class */}
       <NavBar />
       <ToastContainer />
       <Routes>
